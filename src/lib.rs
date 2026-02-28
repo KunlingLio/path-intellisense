@@ -1,23 +1,25 @@
-use zed_extension_api as zed;
+use zed_extension_api::{self as zed, LanguageServerId, Result};
 
-struct PathIntellisenseExtension;
+#[derive(Default)]
+struct CSpellExtension {
+}
 
-impl zed::Extension for PathIntellisenseExtension {
+impl zed::Extension for CSpellExtension {
     fn new() -> Self {
-        Self
+        Self::default()
     }
 
     fn language_server_command(
         &mut self,
-        _language_server_id: &zed::LanguageServerId,
+        language_server_id: &LanguageServerId,
         _worktree: &zed::Worktree,
-    ) -> zed::Result<zed::Command> {
+    ) -> Result<zed::Command> {
         Ok(zed::Command {
-            command: "path-lsp-server".to_string(),
+            command: "/Users/lkl/Code/path-intellisense/target/debug/path-server".to_string(),
             args: vec![],
-            env: vec![],
+            env: Default::default(),
         })
     }
 }
 
-zed::register_extension!(PathIntellisenseExtension);
+zed::register_extension!(CSpellExtension);
