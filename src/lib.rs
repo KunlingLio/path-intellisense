@@ -15,7 +15,7 @@ impl zed::Extension for CSpellExtension {
         _worktree: &zed::Worktree,
     ) -> Result<zed::Command> {
         Ok(zed::Command {
-            command: "/Users/lkl/Code/path-intellisense/target/debug/path-server".to_string(),
+            command: "/Users/lkl/Code/path-server/target/debug/path-server".to_string(),
             args: vec![],
             env: Default::default(),
         })

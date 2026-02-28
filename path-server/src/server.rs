@@ -22,7 +22,13 @@ impl PathServer {
 
 #[tower_lsp::async_trait]
 impl tower_lsp::LanguageServer for PathServer {
-    async fn initialize(&self, _: lsp_types::InitializeParams) -> Result<lsp_types::InitializeResult> {
+    async fn initialize(&self, params: lsp_types::InitializeParams) -> Result<lsp_types::InitializeResult> {
+        if let Some(url) = params.root_uri {
+            self.client
+                .log_message(lsp_types::MessageType::INFO, format!("[Path Server] Workspace root: {}", url))
+                .await;
+            self.resolver.add_workspace_root(&url);
+        }
         Ok(lsp_types::InitializeResult {
             capabilities: lsp_types::ServerCapabilities {
                 completion_provider: Some(lsp_types::CompletionOptions {
@@ -35,6 +41,13 @@ impl tower_lsp::LanguageServer for PathServer {
                     resolve_provider: Some(false),
                     ..Default::default()
                 }),
+                workspace: Some(lsp_types::WorkspaceServerCapabilities {
+                    workspace_folders: Some(lsp_types::WorkspaceFoldersServerCapabilities {
+                        supported: Some(true),
+                        change_notifications: None,
+                    }),
+                    ..Default::default()
+                }),
                 ..Default::default()
             },
             ..Default::default()
@@ -43,8 +56,23 @@ impl tower_lsp::LanguageServer for PathServer {
 
     async fn initialized(&self, _: lsp_types::InitializedParams) {
         self.client
-            .log_message(lsp_types::MessageType::INFO, "[Path Server] Hello world!")
+            .log_message(lsp_types::MessageType::INFO, "[Path Server] Initialized!")
             .await;
+    }
+
+    async fn did_change_workspace_folders(&self, params: lsp_types::DidChangeWorkspaceFoldersParams) {
+        for folder in params.event.added {
+            self.client
+                .log_message(lsp_types::MessageType::INFO, format!("[Path Server] Added workspace folder: {}", folder.uri))
+                .await;
+            self.resolver.add_workspace_root(&folder.uri);
+        }
+        for folder in params.event.removed {
+            self.client
+                .log_message(lsp_types::MessageType::INFO, format!("[Path Server] Removed workspace folder: {}", folder.uri))
+                .await;
+            self.resolver.remove_workspace_root(&folder.uri);
+        }
     }
 
     async fn completion(&self, params: lsp_types::CompletionParams) -> Result<Option<lsp_types::CompletionResponse>> {
