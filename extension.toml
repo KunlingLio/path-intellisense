@@ -1,5 +1,5 @@
-id = "path-intellisense"
-name = "Path intellisense"
+id = "path-server"
+name = "Path server"
 version = "0.0.1"
 schema_version = 1
 authors = ["KunlingLio"]
