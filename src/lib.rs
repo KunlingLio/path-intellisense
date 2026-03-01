@@ -1,8 +1,7 @@
 use zed_extension_api::{self as zed, LanguageServerId, Result};
 
 #[derive(Default)]
-struct CSpellExtension {
-}
+struct CSpellExtension {}
 
 impl zed::Extension for CSpellExtension {
     fn new() -> Self {
