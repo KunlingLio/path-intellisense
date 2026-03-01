@@ -25,12 +25,18 @@ impl PathResolver {
     }
 
     pub async fn complete(&self, input: &str) -> Vec<PathBuf> {
-        // For demonstration purposes, we return a static list of paths.
-        // In a real implementation, you would perform actual file system operations here.
-        vec![
-            PathBuf::from("example.txt"),
-            PathBuf::from("src"),
-            PathBuf::from("README.md"),
-        ]
+        let roots = self.workspace_root.read().unwrap();
+        let mut completions = Vec::new();
+
+        for root in roots.iter() {
+            if let Ok(root_path) = root.to_file_path() {
+                let candidate_path = root_path.join(input);
+                if candidate_path.exists() {
+                    let completion = candidate_path.strip_prefix(&root_path).unwrap_or(&candidate_path).to_path_buf();
+                    completions.push(completion);
+                }
+            }
+        }
+        completions
     }
 }

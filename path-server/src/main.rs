@@ -1,5 +1,6 @@
 mod server;
 mod resolver;
+mod document;
 use crate::server::PathServer;
 
 #[tokio::main]

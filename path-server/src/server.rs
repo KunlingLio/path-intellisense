@@ -1,14 +1,17 @@
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
+use std::collections::HashMap;
 
 use tower_lsp::jsonrpc::Result;
 use tower_lsp::lsp_types;
 
+use crate::document::Document;
 use crate::resolver::PathResolver;
 
 #[derive(Debug)]
 pub struct PathServer {
     client: tower_lsp::Client,
     resolver: Arc<PathResolver>,
+    documents: Arc<Mutex<HashMap<String, Document>>>, // url -> document
 }
 
 impl PathServer {
@@ -16,6 +19,7 @@ impl PathServer {
         Self {
             client,
             resolver: Arc::new(PathResolver::new()),
+            documents: Arc::new(Mutex::new(HashMap::new())),
         }
     }
 }
@@ -41,6 +45,9 @@ impl tower_lsp::LanguageServer for PathServer {
                     resolve_provider: Some(false),
                     ..Default::default()
                 }),
+                text_document_sync: Some(lsp_types::TextDocumentSyncCapability::Kind(
+                    lsp_types::TextDocumentSyncKind::FULL,
+                )),
                 workspace: Some(lsp_types::WorkspaceServerCapabilities {
                     workspace_folders: Some(lsp_types::WorkspaceFoldersServerCapabilities {
                         supported: Some(true),
@@ -75,8 +82,34 @@ impl tower_lsp::LanguageServer for PathServer {
         }
     }
 
+    async fn did_open(&self, params: lsp_types::DidOpenTextDocumentParams) {
+        self.documents.lock().unwrap().insert(params.text_document.uri.to_string(), Document::new(params.text_document.text));
+    }
+
+    async fn did_change(&self, params: lsp_types::DidChangeTextDocumentParams) {
+        if let Some(change) = params.content_changes.into_iter().next() {
+            self.documents.lock().unwrap().entry(params.text_document.uri.to_string())
+                .and_modify(|doc| doc.update_text(change.text.clone()))
+                .or_insert_with(|| Document::new(change.text));
+        }
+    }
+
+    async fn did_close(&self, params: lsp_types::DidCloseTextDocumentParams) {
+        self.documents.lock().unwrap().remove(&params.text_document.uri.to_string());
+    }
+
     async fn completion(&self, params: lsp_types::CompletionParams) -> Result<Option<lsp_types::CompletionResponse>> {
-        let completion_items = self.resolver.complete("").await;
+        let line_number = params.text_document_position.position.line as usize;
+        let character = params.text_document_position.position.character as usize;
+        let input = self.documents.lock().unwrap()
+            .get(&params.text_document_position.text_document.uri.to_string())
+            .and_then(|doc| doc.get_line(line_number))
+            .map(|line| {
+                let character = character.min(line.len());
+                line[..character].to_string()
+            })
+            .unwrap_or_default();
+        let completion_items = self.resolver.complete(&input).await;
         let completion_items = completion_items.into_iter().map(|path| {
             lsp_types::CompletionItem {
                 label: path.to_string_lossy().to_string(),
