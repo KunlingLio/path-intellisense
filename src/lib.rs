@@ -10,7 +10,7 @@ impl zed::Extension for CSpellExtension {
 
     fn language_server_command(
         &mut self,
-        language_server_id: &LanguageServerId,
+        _language_server_id: &LanguageServerId,
         _worktree: &zed::Worktree,
     ) -> Result<zed::Command> {
         Ok(zed::Command {

@@ -1,4 +1,4 @@
-# Path Intellisense
+# Path Server Extension for zed
 
 ## Development
 ### 1. Build `path-server`
