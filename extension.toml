@@ -4,7 +4,7 @@ version = "0.0.1"
 schema_version = 1
 authors = ["KunlingLio"]
 description = "A Zed extension that provides path auto completion for file paths in the editor."
-repository = "https://github.com/KunlingLio/path-intellisense"
+repository = "https://github.com/KunlingLio/path-server-zed"
 
 [language_servers.path-server]
 name = "path-server"
