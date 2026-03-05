@@ -1,5 +1,11 @@
 # Path Server Extension for Zed
 
+> [!WARNING]
+> **This repository is Archived and has been merged into a monorepo.** 
+> 
+> Please visit the new repository for all future updates, issues, and pull requests:
+> 👉 **[kunlinglio/path-server](https://github.com/kunlinglio/path-server)**
+
 Path Server is a high-performance extension for Zed that provides fast and lightweight path autocompletion in any language, offering a **Path Intellisense** like experience.
 
 It is the extension for the [Path Server](https://github.com/kunlinglio/path-server) project, a specialized LSP implementation for file path navigation.
